@@ -29,9 +29,10 @@ class AWSBedrockLLM(LLMBase):
             self.config.model = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 
         # Get AWS config from environment variables or use defaults
-        aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID", "")
-        aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
-        aws_region = os.environ.get("AWS_REGION", "us-west-2")
+        # aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID", "")
+        # aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+        self.config.model = os.environ.get("AWS_LLM_MODEL", "")
+        aws_region = os.environ.get("AWS_REGION", "us-east-1")
 
         # Check if AWS config is provided in the config
         if hasattr(self.config, "aws_access_key_id"):
