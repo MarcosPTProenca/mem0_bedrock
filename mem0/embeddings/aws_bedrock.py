@@ -22,27 +22,17 @@ class AWSBedrockEmbedding(EmbeddingBase):
     def __init__(self, config: Optional[BaseEmbedderConfig] = None):
         super().__init__(config)
 
-        self.config.model = self.config.model or "amazon.titan-embed-text-v1"
+
+        self.config.model = os.environ.get("AWS_EMBEDDER_MODEL", "amazon.titan-embed-text-v2:0")
 
         # Get AWS config from environment variables or use defaults
-        aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID", "")
-        aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
-        aws_region = os.environ.get("AWS_REGION", "us-west-2")
+        aws_region = os.environ.get("AWS_REGION", "us-east-1")
 
         # Check if AWS config is provided in the config
-        if hasattr(self.config, "aws_access_key_id"):
-            aws_access_key = self.config.aws_access_key_id
-        if hasattr(self.config, "aws_secret_access_key"):
-            aws_secret_key = self.config.aws_secret_access_key
         if hasattr(self.config, "aws_region"):
             aws_region = self.config.aws_region
 
-        self.client = boto3.client(
-            "bedrock-runtime",
-            region_name=aws_region,
-            aws_access_key_id=aws_access_key if aws_access_key else None,
-            aws_secret_access_key=aws_secret_key if aws_secret_key else None,
-        )
+        self.client = boto3.session.client("bedrock-runtime", region_name=aws_region)
 
     def _normalize_vector(self, embeddings):
         """Normalize the embedding to a unit vector."""
