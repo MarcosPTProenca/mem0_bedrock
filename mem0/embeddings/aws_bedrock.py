@@ -32,7 +32,7 @@ class AWSBedrockEmbedding(EmbeddingBase):
         if hasattr(self.config, "aws_region"):
             aws_region = self.config.aws_region
 
-        self.client = boto3.session.client("bedrock-runtime", region_name=aws_region)
+        self.client = boto3.session.Session().client("bedrock-runtime", region_name=aws_region)
 
     def _normalize_vector(self, embeddings):
         """Normalize the embedding to a unit vector."""
