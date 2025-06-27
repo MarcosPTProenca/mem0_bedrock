@@ -28,7 +28,7 @@ class AWSBedrockLLM(LLMBase):
         self.config.model = os.environ.get("AWS_LLM_MODEL", "")
 
         if not self.config.model:
-            self.config.model = "us.meta.llama4-scout-17b-instruct-v1:0"
+            self.config.model = "amazon.nova-pro-v1:0"
 
         # Get AWS config from environment variables or use defaults
         # aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID", "")
