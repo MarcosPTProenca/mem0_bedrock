@@ -25,13 +25,15 @@ class AWSBedrockLLM(LLMBase):
     def __init__(self, config: Optional[BaseLlmConfig] = None):
         super().__init__(config)
 
+        self.config.model = os.environ.get("AWS_LLM_MODEL", "")
+
         if not self.config.model:
             self.config.model = "us.meta.llama4-scout-17b-instruct-v1:0"
 
         # Get AWS config from environment variables or use defaults
         # aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID", "")
         # aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
-        self.config.model = os.environ.get("AWS_LLM_MODEL", "")
+        
         aws_region = os.environ.get("AWS_REGION", "us-east-1")
 
         # Check if AWS config is provided in the config
