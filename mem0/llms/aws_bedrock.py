@@ -29,10 +29,6 @@ class AWSBedrockLLM(LLMBase):
 
         if not self.config.model:
             self.config.model = "us.meta.llama4-scout-17b-instruct-v1:0"
-
-        # Get AWS config from environment variables or use defaults
-        # aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID", "")
-        # aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
         
         aws_region = os.environ.get("AWS_REGION", "us-east-1")
 
@@ -40,7 +36,7 @@ class AWSBedrockLLM(LLMBase):
         if hasattr(self.config, "aws_region"):
             aws_region = self.config.aws_region
 
-        self.client = boto3.session.Session().client("bedrock-runtime", region_name=aws_region)
+        self.client = boto3.client("bedrock-runtime", region_name=aws_region)
 
         self.model_kwargs = {
             "temperature": self.config.temperature,
