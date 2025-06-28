@@ -229,35 +229,25 @@ class AWSBedrockLLM(LLMBase):
                 toolConfig=tools_config,
             )
         else:
-            # Use invoke_model method when no tools are provided
-            prompt = self._format_messages(messages)
-            provider = extract_provider(self.config.model)
-            input_body = self._prepare_input(provider, self.config.model, prompt, model_kwargs=self.model_kwargs)
-            body = json.dumps(input_body)
+            # Use converse em vez de invoke_model quando não há tools
+            # 1) Formata as mensagens no padrão Converse
+            conv_messages = [
+                {"role": msg["role"], "content": [{"text": msg["content"]}]}
+                for msg in messages
+            ]
 
-            if provider == "anthropic" or provider == "deepseek":
-                input_body = {
-                    "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
-                    "max_tokens": self.model_kwargs["max_tokens_to_sample"] or self.model_kwargs["max_tokens"] or 5000,
-                    "temperature": self.model_kwargs["temperature"] or 0.1,
-                    "top_p": self.model_kwargs["top_p"] or 0.9,
-                    "anthropic_version": "bedrock-2023-05-31",
-                }
+            # 2) Prepara a configuração de inferência
+            inference_config = {
+                "temperature": self.model_kwargs["temperature"],
+                "maxTokens": self.model_kwargs["max_tokens_to_sample"],
+                "topP": self.model_kwargs["top_p"],
+            }
 
-                body = json.dumps(input_body)
-
-                response = self.client.invoke_model(
-                    body=body,
-                    modelId=self.config.model,
-                    accept="application/json",
-                    contentType="application/json",
-                )
-            else:
-                response = self.client.invoke_model(
-                    body=body,
-                    modelId=self.config.model,
-                    accept="application/json",
-                    contentType="application/json",
-                )
+            # 3) Chama a API converse
+            response = self.client.converse(
+                modelId=self.config.model,
+                messages=conv_messages,
+                inferenceConfig=inference_config,
+            )
 
         return self._parse_response(response, tools)
