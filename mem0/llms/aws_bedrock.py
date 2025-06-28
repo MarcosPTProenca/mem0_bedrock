@@ -25,10 +25,10 @@ class AWSBedrockLLM(LLMBase):
     def __init__(self, config: Optional[BaseLlmConfig] = None):
         super().__init__(config)
 
-        self.config.model = os.environ.get("AWS_LLM_MODEL", "arn:aws:bedrock:us-east-1:070374294862:inference-profile/us.meta.llama4-scout-17b-instruct-v1:0")
+        self.config.model = os.environ.get("AWS_LLM_MODEL", "us.meta.llama4-scout-17b-instruct-v1:0")
 
         if not self.config.model:
-            self.config.model = "arn:aws:bedrock:us-east-1:070374294862:inference-profile/us.meta.llama4-scout-17b-instruct-v1:0"
+            self.config.model = "us.meta.llama4-scout-17b-instruct-v1:0"
         
         aws_region = os.environ.get("AWS_REGION", "us-east-1")
 
