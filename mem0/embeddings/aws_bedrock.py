@@ -42,14 +42,15 @@ class AWSBedrockEmbedding(EmbeddingBase):
         """Call out to Bedrock embedding endpoint."""
 
         session = boto3.Session()
-        creds = session.get_credentials()
-        # 2) Ajusta as variáveis de ambiente permanentemente para este processo
-        os.environ["AWS_ACCESS_KEY_ID"] = creds.access_key
-        os.environ["AWS_SECRET_ACCESS_KEY"] = creds.secret_key
-        if creds.token:
-            os.environ["AWS_SESSION_TOKEN"] = creds.token
-
-        client = session.client("bedrock-runtime", region_name=self.aws_region)
+        frozen = session.get_credentials().get_frozen_credentials()
+        # 2) Cria um novo cliente passando as credenciais explicitamente
+        client = boto3.client(
+            "bedrock-runtime",
+            region_name=self.aws_region,
+            aws_access_key_id=frozen.access_key,
+            aws_secret_access_key=frozen.secret_key,
+            aws_session_token=frozen.token,
+        )
 
         # Format input body based on the provider
         provider = self.config.model.split(".")[0]
