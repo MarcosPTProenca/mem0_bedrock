@@ -43,6 +43,14 @@ class AWSBedrockEmbedding(EmbeddingBase):
     def _get_embedding(self, text):
         """Call out to Bedrock embedding endpoint."""
 
+        session = boto3.Session()
+        creds = session.get_credentials()
+        # 2) Ajusta as variáveis de ambiente permanentemente para este processo
+        os.environ["AWS_ACCESS_KEY_ID"] = creds.access_key
+        os.environ["AWS_SECRET_ACCESS_KEY"] = creds.secret_key
+        if creds.token:
+            os.environ["AWS_SESSION_TOKEN"] = creds.token
+
         # Format input body based on the provider
         provider = self.config.model.split(".")[0]
         input_body = {}

@@ -203,6 +203,14 @@ class AWSBedrockLLM(LLMBase):
             str: The generated response.
         """
 
+        session = boto3.Session()
+        creds = session.get_credentials()
+        # 2) Ajusta as variáveis de ambiente permanentemente para este processo
+        os.environ["AWS_ACCESS_KEY_ID"] = creds.access_key
+        os.environ["AWS_SECRET_ACCESS_KEY"] = creds.secret_key
+        if creds.token:
+            os.environ["AWS_SESSION_TOKEN"] = creds.token
+
         if tools:
             # Use converse method when tools are provided
             messages = [
