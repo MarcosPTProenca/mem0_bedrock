@@ -66,31 +66,27 @@ class AWSBedrockLLM(LLMBase):
 
     def _parse_response(self, response, tools) -> str:
         """
-        Process the response based on whether tools are used or not.
-
-        Args:
-            response: The raw response from API.
-            tools: The list of tools provided in the request.
-
-        Returns:
-            str or dict: The processed response.
+        Process the response from either converse (dict with 'output')
+        or invoke_model (HTTPResponse in 'body').
         """
+        # 1) Se vierem ferramentas, mantemos a lógica anterior
         if tools:
             processed_response = {"tool_calls": []}
-
-            if response["output"]["message"]["content"]:
-                for item in response["output"]["message"]["content"]:
-                    if "toolUse" in item:
-                        processed_response["tool_calls"].append(
-                            {
-                                "name": item["toolUse"]["name"],
-                                "arguments": item["toolUse"]["input"],
-                            }
-                        )
-
+            for item in response["output"]["message"]["content"]:
+                if "toolUse" in item:
+                    processed_response["tool_calls"].append({
+                        "name": item["toolUse"]["name"],
+                        "arguments": item["toolUse"]["input"],
+                    })
             return processed_response
 
-        response_body = response.get("body").read().decode()
+        # 2) Se for chamada via Converse: parseia diretamente do dict
+        if isinstance(response, dict) and "output" in response:
+            # retorna o texto do primeiro bloco
+            return response["output"]["message"]["content"][0]["text"]
+
+        # 3) Caso seja invoke_model (legado), extrai do body
+        response_body = response["body"].read().decode()
         response_json = json.loads(response_body)
         return response_json.get("content", [{"text": ""}])[0].get("text", "")
 
