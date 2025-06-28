@@ -30,13 +30,11 @@ class AWSBedrockLLM(LLMBase):
         if not self.config.model:
             self.config.model = "us.meta.llama4-scout-17b-instruct-v1:0"
         
-        aws_region = os.environ.get("AWS_REGION", "us-east-1")
+        self.aws_region = os.environ.get("AWS_REGION", "us-east-1")
 
         # Check if AWS config is provided in the config
         if hasattr(self.config, "aws_region"):
-            aws_region = self.config.aws_region
-
-        self.client = boto3.Session().client("bedrock-runtime", region_name=aws_region)
+            self.aws_region = self.config.aws_region
 
         self.model_kwargs = {
             "temperature": self.config.temperature,
@@ -211,6 +209,8 @@ class AWSBedrockLLM(LLMBase):
         if creds.token:
             os.environ["AWS_SESSION_TOKEN"] = creds.token
 
+        client = session.client("bedrock-runtime", region_name=self.aws_region)
+
         if tools:
             # Use converse method when tools are provided
             messages = [
@@ -226,7 +226,7 @@ class AWSBedrockLLM(LLMBase):
             }
             tools_config = {"tools": self._convert_tool_format(tools)}
 
-            response = self.client.converse(
+            response = client.converse(
                 modelId=self.config.model,
                 messages=messages,
                 inferenceConfig=inference_config,
@@ -263,6 +263,6 @@ class AWSBedrockLLM(LLMBase):
             if system_blocks:
                 kwargs["system"] = system_blocks
 
-            response = self.client.converse(**kwargs)
+            response = client.converse(**kwargs)
 
         return self._parse_response(response, tools)

@@ -26,13 +26,11 @@ class AWSBedrockEmbedding(EmbeddingBase):
         self.config.model = os.environ.get("AWS_EMBEDDER_MODEL", "amazon.titan-embed-text-v2:0")
 
         # Get AWS config from environment variables or use defaults
-        aws_region = os.environ.get("AWS_REGION", "us-east-1")
+        self.aws_region = os.environ.get("AWS_REGION", "us-east-1")
 
         # Check if AWS config is provided in the config
         if hasattr(self.config, "aws_region"):
-            aws_region = self.config.aws_region
-
-        self.client = boto3.Session().client("bedrock-runtime", region_name=aws_region)
+            self.aws_region = self.config.aws_region
 
     def _normalize_vector(self, embeddings):
         """Normalize the embedding to a unit vector."""
@@ -51,6 +49,8 @@ class AWSBedrockEmbedding(EmbeddingBase):
         if creds.token:
             os.environ["AWS_SESSION_TOKEN"] = creds.token
 
+        client = session.client("bedrock-runtime", region_name=self.aws_region)
+
         # Format input body based on the provider
         provider = self.config.model.split(".")[0]
         input_body = {}
@@ -65,7 +65,7 @@ class AWSBedrockEmbedding(EmbeddingBase):
         body = json.dumps(input_body)
 
         try:
-            response = self.client.invoke_model(
+            response = client.invoke_model(
                 body=body,
                 modelId=self.config.model,
                 accept="application/json",
