@@ -34,8 +34,6 @@ class BaseEmbedderConfig(ABC):
         # LM Studio specific
         lmstudio_base_url: Optional[str] = "http://localhost:1234/v1",
         # AWS Bedrock specific
-        aws_access_key_id: Optional[str] = None,
-        aws_secret_access_key: Optional[str] = None,
         aws_region: Optional[str] = "us-west-2",
     ):
         """
@@ -98,6 +96,4 @@ class BaseEmbedderConfig(ABC):
         self.lmstudio_base_url = lmstudio_base_url
 
         # AWS Bedrock specific
-        self.aws_access_key_id = aws_access_key_id
-        self.aws_secret_access_key = aws_secret_access_key
         self.aws_region = aws_region
