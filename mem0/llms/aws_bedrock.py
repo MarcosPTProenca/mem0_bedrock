@@ -36,7 +36,7 @@ class AWSBedrockLLM(LLMBase):
         if hasattr(self.config, "aws_region"):
             aws_region = self.config.aws_region
 
-        self.client = boto3.client("bedrock-runtime", region_name=aws_region)
+        self.client = boto3.Session().client("bedrock-runtime", region_name=aws_region)
 
         self.model_kwargs = {
             "temperature": self.config.temperature,
