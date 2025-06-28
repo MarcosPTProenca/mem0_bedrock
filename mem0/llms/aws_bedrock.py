@@ -25,7 +25,23 @@ class AWSBedrockLLM(LLMBase):
     def __init__(self, config: Optional[BaseLlmConfig] = None):
         super().__init__(config)
 
+        # CORREÇÃO: Usar inference profile ID ao invés do model ID direto
+        # Para Meta Llama 4 Scout, você DEVE usar o inference profile
         self.config.model = os.environ.get("AWS_LLM_MODEL", "us.meta.llama4-scout-17b-instruct-v1:0")
+
+        # Mapear model IDs para inference profile IDs
+        model_to_inference_profile = {
+            "meta.llama4-scout-17b-instruct-v1:0": "us.meta.llama4-scout-17b-instruct-v1:0",
+            "us.meta.llama4-scout-17b-instruct-v1:0": "us.meta.llama4-scout-17b-instruct-v1:0",
+            # Adicione outros modelos conforme necessário
+            "meta.llama4-maverick-17b-instruct-v1:0": "us.meta.llama4-maverick-17b-instruct-v1:0",
+            "us.meta.llama4-maverick-17b-instruct-v1:0": "us.meta.llama4-maverick-17b-instruct-v1:0",
+        }
+
+        # Converter para inference profile se necessário
+        if self.config.model in model_to_inference_profile:
+            self.config.model = model_to_inference_profile[self.config.model]
+            print(f"Usando inference profile: {self.config.model}")
 
         if not self.config.model:
             self.config.model = "us.meta.llama4-scout-17b-instruct-v1:0"
@@ -219,7 +235,7 @@ class AWSBedrockLLM(LLMBase):
             tools_config = {"tools": self._convert_tool_format(tools)}
 
             response = self.client.converse(
-                modelId=self.config.model,
+                modelId=self.config.model,  # Agora usa o inference profile
                 messages=messages,
                 inferenceConfig=inference_config,
                 toolConfig=tools_config,
@@ -248,7 +264,7 @@ class AWSBedrockLLM(LLMBase):
 
             # 4) Invoca o converse
             kwargs = {
-                "modelId": self.config.model,
+                "modelId": self.config.model,  # Agora usa o inference profile
                 "messages": conv_messages,
                 "inferenceConfig": inference_config,
             }
@@ -258,3 +274,12 @@ class AWSBedrockLLM(LLMBase):
             response = self.client.converse(**kwargs)
 
         return self._parse_response(response, tools)
+
+    def get_available_models(self):
+        """
+        Retorna uma lista dos inference profiles disponíveis para Meta Llama 4
+        """
+        return [
+            "us.meta.llama4-scout-17b-instruct-v1:0",
+            "us.meta.llama4-maverick-17b-instruct-v1:0",
+        ]
