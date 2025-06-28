@@ -229,25 +229,36 @@ class AWSBedrockLLM(LLMBase):
                 toolConfig=tools_config,
             )
         else:
-            # Use converse em vez de invoke_model quando não há tools
-            # 1) Formata as mensagens no padrão Converse
+            # Use converse method when no tools are provided
+            # 1) Formata o prompt de sistema, se houver
+            system_blocks = None
+            # se você quiser passar system_prompt, deve estar em response_format ou via atributo
+            if isinstance(response_format, dict) and response_format.get("system_prompt"):
+                system_blocks = [{"text": response_format["system_prompt"]}]
+
+            # 2) Constrói lista de mensagens user/assistant
             conv_messages = [
                 {"role": msg["role"], "content": [{"text": msg["content"]}]}
                 for msg in messages
+                if msg["role"] in ("user", "assistant")
             ]
 
-            # 2) Prepara a configuração de inferência
+            # 3) Configuração de inferência
             inference_config = {
                 "temperature": self.model_kwargs["temperature"],
                 "maxTokens": self.model_kwargs["max_tokens_to_sample"],
                 "topP": self.model_kwargs["top_p"],
             }
 
-            # 3) Chama a API converse
-            response = self.client.converse(
-                modelId=self.config.model,
-                messages=conv_messages,
-                inferenceConfig=inference_config,
-            )
+            # 4) Invoca o converse
+            kwargs = {
+                "modelId": self.config.model,
+                "messages": conv_messages,
+                "inferenceConfig": inference_config,
+            }
+            if system_blocks:
+                kwargs["system"] = system_blocks
+
+            response = self.client.converse(**kwargs)
 
         return self._parse_response(response, tools)
