@@ -27,32 +27,60 @@ class GeminiLLM(LLMBase):
 
     def _parse_response(self, response, tools):
         """
-        Process the response based on whether tools are used or not.
-
-        Args:
-            response: The raw response from API.
-            tools: The list of tools provided in the request.
-
-        Returns:
-            str or dict: The processed response.
+        Processa a resposta do Gemini de forma segura, extraindo texto e
+        chamadas de função sem lançar IndexError ou AttributeError
+        quando não houver candidatos ou partes de conteúdo.
         """
         if tools:
+            # extrai conteúdo de forma segura
+            content_text = None
+            try:
+                candidates = response.candidates
+                if candidates and candidates[0].content.parts:
+                    text_part = candidates[0].content.parts[0]
+                    content_text = text_part.text or None
+            except (IndexError, AttributeError):
+                content_text = None
+
             processed_response = {
-                "content": (content if (content := response.candidates[0].content.parts[0].text) else None),
+                "content": content_text,
                 "tool_calls": [],
             }
 
-            for part in response.candidates[0].content.parts:
-                if fn := part.function_call:
+            # percorre todas as partes para extrair possíveis chamadas de função
+            try:
+                parts = response.candidates[0].content.parts
+            except (IndexError, AttributeError):
+                parts = []
+
+            for part in parts:
+                if fn := getattr(part, "function_call", None):
+                    # se for o protobuf FunctionCall
                     if isinstance(fn, protos.FunctionCall):
                         fn_call = type(fn).to_dict(fn)
-                        processed_response["tool_calls"].append({"name": fn_call["name"], "arguments": fn_call["args"]})
-                        continue
-                    processed_response["tool_calls"].append({"name": fn.name, "arguments": fn.args})
+                        processed_response["tool_calls"].append({
+                            "name": fn_call["name"],
+                            "arguments": fn_call["args"]
+                        })
+                    else:
+                        # para outros formatos de FunctionCall
+                        processed_response["tool_calls"].append({
+                            "name": fn.name,
+                            "arguments": fn.args
+                        })
 
             return processed_response
+
         else:
-            return response.candidates[0].content.parts[0].text
+            # versão sem ferramentas: retorna texto ou None
+            try:
+                candidates = response.candidates
+                if candidates and candidates[0].content.parts:
+                    return candidates[0].content.parts[0].text
+            except (IndexError, AttributeError):
+                pass
+
+            return ""
 
     def _reformat_messages(self, messages: List[Dict[str, str]]):
         """
