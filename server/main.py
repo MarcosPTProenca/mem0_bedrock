@@ -51,7 +51,7 @@ DEFAULT_CONFIG = {
         "provider": "neo4j",
         "config": {"url": NEO4J_URI, "username": NEO4J_USERNAME, "password": NEO4J_PASSWORD},
     },
-    "llm": {"provider": "aws_bedrock", "config": {"temperature": 0.2, "model": AWS_LLM_MODEL}},
+    "llm": {"provider": "gemini", "config": {"temperature": 0.2, "model": AWS_LLM_MODEL}},
     "embedder": {"provider": "aws_bedrock", "config": {"model": AWS_EMBEDDER_MODEL}},
     "history_db_path": HISTORY_DB_PATH,
 }
