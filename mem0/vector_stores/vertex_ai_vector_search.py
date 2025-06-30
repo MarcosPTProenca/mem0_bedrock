@@ -462,7 +462,7 @@ class GoogleMatchingEngine(VectorStoreBase):
 
         try:
             # Use a zero vector for the search
-            dimension = 768  # This should be configurable based on the model
+            dimension = 1536  # This should be configurable based on the model
             zero_vector = [0.0] * dimension
 
             # Use a large limit if none specified

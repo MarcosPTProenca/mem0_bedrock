@@ -5,9 +5,9 @@ from enum import Enum
 class VectorDimensions(Enum):
     GPT4ALL = 384
     OPENAI = 1536
-    VERTEX_AI = 768
+    VERTEX_AI = 1536
     HUGGING_FACE = 384
-    GOOGLE_AI = 768
+    GOOGLE_AI = 1536
     MISTRAL_AI = 1024
     NVIDIA_AI = 1024
     COHERE = 384
