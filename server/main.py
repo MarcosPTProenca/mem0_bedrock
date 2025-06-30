@@ -30,8 +30,8 @@ MEMGRAPH_URI = os.environ.get("MEMGRAPH_URI", "bolt://localhost:7687")
 MEMGRAPH_USERNAME = os.environ.get("MEMGRAPH_USERNAME", "memgraph")
 MEMGRAPH_PASSWORD = os.environ.get("MEMGRAPH_PASSWORD", "mem0graph")
 
-AWS_LLM_MODEL = os.environ.get("AWS_LLM_MODEL")
-AWS_EMBEDDER_MODEL = os.environ.get("AWS_EMBEDDER_MODEL")
+LLM_MODEL = os.environ.get("LLM_MODEL")
+EMBEDDER_MODEL = os.environ.get("EMBEDDER_MODEL")
 HISTORY_DB_PATH = os.environ.get("HISTORY_DB_PATH", "/app/history/history.db")
 
 DEFAULT_CONFIG = {
@@ -51,8 +51,8 @@ DEFAULT_CONFIG = {
         "provider": "neo4j",
         "config": {"url": NEO4J_URI, "username": NEO4J_USERNAME, "password": NEO4J_PASSWORD},
     },
-    "llm": {"provider": "gemini", "config": {"temperature": 0.2, "model": AWS_LLM_MODEL}},
-    "embedder": {"provider": "aws_bedrock", "config": {"model": AWS_EMBEDDER_MODEL}},
+    "llm": {"provider": "gemini", "config": {"temperature": 0.2, "model": LLM_MODEL}},
+    "embedder": {"provider": "aws_bedrock", "config": {"model": EMBEDDER_MODEL}},
     "history_db_path": HISTORY_DB_PATH,
 }
 
