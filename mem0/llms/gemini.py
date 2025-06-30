@@ -36,24 +36,48 @@ class GeminiLLM(LLMBase):
         Returns:
             str or dict: The processed response.
         """
+        # protege se não vier nenhum candidato
+        candidates = getattr(response, "candidates", None)
+        if not candidates:
+            # sem candidatos => retorna vazio ou estrutura vazia de tools
+            if tools:
+                return {"content": None, "tool_calls": []}
+            return ""
+
+        # pega o primeiro candidato
+        candidate = candidates[0]
+        parts = getattr(candidate.content, "parts", None)
+        if not parts:
+            if tools:
+                return {"content": None, "tool_calls": []}
+            return ""
+
+        # extrai o texto do primeiro bloco
+        text = parts[0].text or ""
+
         if tools:
-            processed_response = {
-                "content": (content if (content := response.candidates[0].content.parts[0].text) else None),
-                "tool_calls": [],
-            }
+            processed = {"content": text, "tool_calls": []}
+            # percorre todas as partes tentando achar chamadas de função
+            for part in parts:
+                fn = getattr(part, "function_call", None)
+                if not fn:
+                    continue
+                # caso seja o protos.FunctionCall
+                from google.protobuf import json_format
+                if isinstance(fn, protos.FunctionCall):
+                    # converte para dict
+                    fn_dict = json_format.MessageToDict(fn._pb)  
+                    name = fn_dict.get("name")
+                    args = fn_dict.get("arguments")
+                    processed["tool_calls"].append({"name": name, "arguments": args})
+                else:
+                    # suporte a outras implementações
+                    processed["tool_calls"].append({"name": fn.name, "arguments": fn.args})
+            return processed
 
-            for part in response.candidates[0].content.parts:
-                if fn := part.function_call:
-                    if isinstance(fn, protos.FunctionCall):
-                        fn_call = type(fn).to_dict(fn)
-                        processed_response["tool_calls"].append({"name": fn_call["name"], "arguments": fn_call["args"]})
-                        continue
-                    processed_response["tool_calls"].append({"name": fn.name, "arguments": fn.args})
-
-            return processed_response
-        else:
-            return response.candidates[0].content.parts[0].text
-
+        # sem tools, só retorna o texto
+        return text
+    
     def _reformat_messages(self, messages: List[Dict[str, str]]):
         """
         Reformat messages for Gemini.
